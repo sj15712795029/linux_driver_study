@@ -2,6 +2,7 @@
 
 ## 2024/06/11
 - [add] [boot] add afboot for stm32 bootloader
+- [add] [toolchain] add toolchain for stm32
 
 # Realease V1.0
 |     |     |     |

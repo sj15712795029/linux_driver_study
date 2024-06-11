@@ -6,12 +6,13 @@
 
 配置交叉编译工具链
 
-| 归属   | 编译指令 | 说明 |
-| ------ | -------- | ---- |
-| afboot |          |      |
-| kernel |          |      |
-| rootfs |          |      |
-|        |          |      |
+| 归属      | 编译指令                                          | 说明                                             |
+| --------- | ------------------------------------------------- | ------------------------------------------------ |
+| Toolchain | need to config env.sh ,Fill in your own real path | https://launchpad.net/gcc-arm-embedded/+download |
+| afboot    |                                                   |                                                  |
+| kernel    |                                                   |                                                  |
+| rootfs    |                                                   |                                                  |
+|           |                                                   |                                                  |
 
 # 烧录
 
