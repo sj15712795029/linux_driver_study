@@ -4,6 +4,10 @@
 - [add] [boot] add afboot for stm32 bootloader
 - [add] [toolchain] add toolchain for stm32
 
+## 2024/06/12
+
+- [add] [boot] add afboot for wireless link stm32f407(1/2)
+
 # Realease V1.0
 |     |     |     |
 |-----|-----|-----|

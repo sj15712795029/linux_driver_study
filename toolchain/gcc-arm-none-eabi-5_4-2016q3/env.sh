@@ -1,1 +1,0 @@
-export PATH=/home/zhongjun/project/linux_driver_study/toolchain/gcc-arm-none-eabi-5_4-2016q3/bin:$PATH

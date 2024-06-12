@@ -19,10 +19,15 @@ obj-y += gpio.o mpu.o qspi.o start_kernel.o
 obj-f4 += $(obj-y) usart-f4.o
 obj-f7 += $(obj-y) usart-f7.o
 
-all: stm32f429i-disco stm32429i-eval stm32f469i-disco stm32746g-eval stm32h743i-eval
+all: wireless_link_stm32f407 stm32f429i-disco stm32429i-eval stm32f469i-disco stm32746g-eval stm32h743i-eval
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) -DKERNEL_ADDR=$(KERNEL_ADDR) -DDTB_ADDR=$(DTB_ADDR) $< -o $@
+
+wireless_link_stm32f407: wireless_link_stm32f407.o $(obj-f4)
+	$(LD) -T .lds $(LINKERFLAGS) -o wireless_link_stm32f407.elf wireless_link_stm32f407.o $(obj-f4)
+	$(OBJCOPY) -Obinary wireless_link_stm32f407.elf wireless_link_stm32f407.bin
+	$(SIZE) wireless_link_stm32f407.elf
 
 stm32f429i-disco: stm32f429i-disco.o $(obj-f4)
 	$(LD) -T stm32f429.lds $(LINKERFLAGS) -o stm32f429i-disco.elf stm32f429i-disco.o $(obj-f4)
