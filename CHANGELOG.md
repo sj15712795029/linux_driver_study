@@ -12,6 +12,7 @@
 
 - [add] [boot] add afboot for wireless link stm32f407(2/2)
 - [add] [kernel] add linux 6.1.27 linux kernel source code
+- [change] [kernel] switch linux kernel 6.1.27 to 3.17,because 6.1.27 build image size > 2M, but stm32f407zgt6 rom size is 1M.
 
 # Realease V1.0
 |     |     |     |
