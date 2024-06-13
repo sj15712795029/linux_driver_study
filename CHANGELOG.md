@@ -8,6 +8,10 @@
 
 - [add] [boot] add afboot for wireless link stm32f407(1/2)
 
+## 2024/06/13
+
+- [add] [boot] add afboot for wireless link stm32f407(2/2)
+
 # Realease V1.0
 |     |     |     |
 |-----|-----|-----|

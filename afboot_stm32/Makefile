@@ -25,7 +25,7 @@ all: wireless_link_stm32f407 stm32f429i-disco stm32429i-eval stm32f469i-disco st
 	$(CC) -c $(CFLAGS) -DKERNEL_ADDR=$(KERNEL_ADDR) -DDTB_ADDR=$(DTB_ADDR) $< -o $@
 
 wireless_link_stm32f407: wireless_link_stm32f407.o $(obj-f4)
-	$(LD) -T .lds $(LINKERFLAGS) -o wireless_link_stm32f407.elf wireless_link_stm32f407.o $(obj-f4)
+	$(LD) -T wireless_link_stm32f407.lds $(LINKERFLAGS) -o wireless_link_stm32f407.elf wireless_link_stm32f407.o $(obj-f4)
 	$(OBJCOPY) -Obinary wireless_link_stm32f407.elf wireless_link_stm32f407.bin
 	$(SIZE) wireless_link_stm32f407.elf
 

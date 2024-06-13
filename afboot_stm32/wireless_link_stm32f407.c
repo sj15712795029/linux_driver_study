@@ -1,7 +1,11 @@
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "stm32f4_regs.h"
+#include "usart.h"
+#include "gpio.h"
+#include "start_kernel.h"
 
 #define CONFIG_HSE_HZ	8000000
 #define CONFIG_PLL_M	8
@@ -15,7 +19,10 @@
 #error PLL clock does not match 168 MHz
 #endif
 
+#define BANK1_SRAM3_ADDR    ((uint32_t)(0x68000000))	
+
 static void *gpio_base = (void *)GPIOA_BASE;
+static void *usart_base = (void *)USART6_BASE;
 
 static void clock_setup(void)
 {
@@ -69,11 +76,63 @@ static void clock_setup(void)
 	*RCC_APB1ENR |= 0x36FEC9FF;
 	*RCC_APB2ENR |= 0x75F33;
 	
-	
+	*RCC_AHB1LPENR &= ~RCC_AHB1LPENR_OTGHSULPILPEN;
 }
 
-static void sram_init(void)
+
+static void uart_init(void)
 {
+	gpio_set_usart(gpio_base, 'G', 9, 8);
+	gpio_set_usart(gpio_base, 'G', 14, 8);
+	
+	usart_setup(usart_base, PLLCLK_HZ/2);
+}
+
+static void extern_sram_write(uint8_t *data,uint32_t data_len,uint32_t address)
+{
+	for(; data_len !=0; data_len--)  
+	{										    
+		*(volatile uint8_t*)(BANK1_SRAM3_ADDR+address)=*data;	  
+		address++;
+		data++;
+	}  
+}
+
+void extern_sram_read(uint8_t *data,uint32_t data_len,uint32_t address)
+{
+	for(; data_len !=0; data_len--)  
+	{											    
+		*data++=*(volatile uint8_t*)(BANK1_SRAM3_ADDR+address);    
+		address++;
+	}  
+} 
+
+void extern_sram_test(void)
+{
+	uint32_t i=0;  	  
+	uint8_t temp=0;				   
+
+	for(i=0;i<1024*1024;i+=4096)
+	{
+		extern_sram_write(&temp,1,i);
+		temp++;
+	}
+	  
+ 	for(i=0;i<1024*1024;i+=4096) 
+	{
+  		extern_sram_read(&temp,1,i);
+		usart_putch(usart_base, temp);
+		usart_putch(usart_base, ' ');  
+ 	}
+}
+
+
+static void external_sram_init(void)
+{
+	volatile uint32_t *FMC_BCR_3 = (void *)(FMC_BASE + 0x10);
+	volatile uint32_t *FMC_BTR_3 = (void *)(FMC_BASE + 0x10 + 4);
+	volatile uint32_t *FMC_BWTR_3 = (void *)(FMC_BASE + 0x104 + 0x10);
+	
 	/* GPIO AF */
 	gpio_set_fmc(gpio_base, 'F', 0); // PF0   ------> FSMC_A0
 	gpio_set_fmc(gpio_base, 'F', 1); // PF1   ------> FSMC_A1
@@ -91,6 +150,10 @@ static void sram_init(void)
 	gpio_set_fmc(gpio_base, 'G', 3); // PG3   ------> FSMC_A13
 	gpio_set_fmc(gpio_base, 'G', 4); // PG4   ------> FSMC_A14
 	gpio_set_fmc(gpio_base, 'G', 5); // PG5   ------> FSMC_A15
+	gpio_set_fmc(gpio_base, 'D', 11); // PD11   ------> FSMC_A16
+	gpio_set_fmc(gpio_base, 'D', 12); // PD12   ------> FSMC_A17
+	gpio_set_fmc(gpio_base, 'D', 13); // PD13   ------> FSMC_A18
+	
 	gpio_set_fmc(gpio_base, 'D', 14); // PD14   ------> FSMC_D0
 	gpio_set_fmc(gpio_base, 'D', 15); // PD15   ------> FSMC_D1
 	gpio_set_fmc(gpio_base, 'D', 0); // PD0   ------> FSMC_D2
@@ -107,12 +170,28 @@ static void sram_init(void)
 	gpio_set_fmc(gpio_base, 'D', 8); // PD8   ------> FSMC_D13
 	gpio_set_fmc(gpio_base, 'D', 9); // PD9   ------> FSMC_D14
 	gpio_set_fmc(gpio_base, 'D', 10); // PD10   ------> FSMC_D15
+	
 	gpio_set_fmc(gpio_base, 'D', 4); // PD4   ------> FSMC_NOE
 	gpio_set_fmc(gpio_base, 'D', 5); // PD5   ------> FSMC_NWE
 	gpio_set_fmc(gpio_base, 'G', 10); // PG10   ------> FSMC_NE3
-	gpio_set_fmc(gpio_base, 'G', 12); // PG12   ------> FSMC_NE4
 	gpio_set_fmc(gpio_base, 'E', 0); // PE0   ------> FSMC_NBL0
 	gpio_set_fmc(gpio_base, 'E', 1); // PE1   ------> FSMC_NBL1
+	
+	/* FSMC init */
+	*FMC_BCR_3 = 0x00000000;
+	*FMC_BTR_3 = 0x00000000;
+	*FMC_BWTR_3 = 0x00000000;
+	
+	*FMC_BCR_3 |= 1 << 12; // enable write
+	*FMC_BCR_3 |= 1 << 4; // 16 bit bus width
+	
+	*FMC_BTR_3 |= 3 << 8; // Data-phase duration 3 HCLK 6*3=18ns	 
+	*FMC_BTR_3 |= 0 << 4; // Address-hold phase duration
+	*FMC_BTR_3 |= 2 << 0; // Address setup phase duration 2 HCLK 12ns	
+	
+	*FMC_BWTR_3 = 0x0FFFFFFF;
+	
+	*FMC_BCR_3 |=1 << 0; // enable bank3 
 }
 
 int main(void)
@@ -126,6 +205,18 @@ int main(void)
 	}
 	
 	clock_setup();
+	uart_init();
+	usart_putch(usart_base, 'U');
+	
+	external_sram_init();
+	usart_putch(usart_base, 'S');
+
+	extern_sram_test();
+	usart_putch(usart_base, 'T');
+
+	start_kernel();
+	
+	return 0;
 
 }
 
