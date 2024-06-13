@@ -11,6 +11,7 @@
 ## 2024/06/13
 
 - [add] [boot] add afboot for wireless link stm32f407(2/2)
+- [add] [kernel] add linux 6.1.27 linux kernel source code
 
 # Realease V1.0
 |     |     |     |
